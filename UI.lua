@@ -31,7 +31,7 @@ local DIFF_NAME = { [0] = L["orange"], [1] = L["gelb"], [2] = L["gruen"], [3] = 
 local profitHead
 
 local frame, scroll, scrollChild, rows
-local statusText, footerText, emptyText, searchBox, profitCheck, subCheck
+local statusText, footerText, emptyText, searchBox, profitCheck, subCheck, sourceBtn
 local searchText = ""
 local autoOpened = false    -- Fenster wurde vom Berufsfenster geoeffnet
 local userMoved = false     -- Spieler hat das Fenster selbst verschoben
@@ -767,16 +767,42 @@ local function build()
     -- Statuszeile
     statusText = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     statusText:SetPoint("TOPLEFT", 20, -74)
-    statusText:SetPoint("TOPRIGHT", -20, -74)
+    statusText:SetPoint("TOPRIGHT", -150, -74)
     statusText:SetJustifyH("LEFT")
+
+    -- Preisquelle umschalten: Linksklick naechste, Rechtsklick vorige
+    sourceBtn = button(frame, "", 126)
+    sourceBtn:SetHeight(18)
+    sourceBtn:SetPoint("TOPRIGHT", -18, -69)
+    sourceBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    sourceBtn:SetScript("OnClick", function(self, btn)
+        ns.Prices.Cycle(btn == "RightButton" and -1 or 1)
+        UI.Refresh()
+        if self:IsMouseOver() and self:GetScript("OnEnter") then self:GetScript("OnEnter")(self) end
+    end)
+    tooltip(sourceBtn, L["Preisquelle"], function()
+        local db = ns.Config.db
+        local list = ns.Prices.available or ns.Prices.Detect()
+        local lines = { L["Aktuell: "] .. ns.Prices.ModeLabel(db.priceSource), "" }
+        lines[#lines + 1] = L["Auto = Auctionator, sonst TSM, sonst eigener AH-Scan"]
+        lines[#lines + 1] = L["Geladen: "] .. ((#list > 0) and table.concat(list, ", ") or L["keine"])
+        if ns.Prices.HasTSM() then
+            lines[#lines + 1] = L["TSM-Formel: "] .. tostring(db.tsmSource or ns.Prices.TSM_DEFAULT)
+        else
+            lines[#lines + 1] = L["TSM: ab Version 4.15 (Forever-Support)"]
+        end
+        lines[#lines + 1] = ""
+        lines[#lines + 1] = L["Linksklick: naechste Quelle, Rechtsklick: vorige"]
+        return table.concat(lines, "\n")
+    end)
     local statusHit = CreateFrame("Frame", nil, frame)
     statusHit:SetAllPoints(statusText)
     statusHit:EnableMouse(true)
     tooltip(statusHit, L["Preisquellen"], function()
         local list = ns.Prices.available or ns.Prices.Detect()
-        return L["Modus: "] .. ns.Str(ns.Config.db.priceSource) .. L["\nVerfuegbar: "] ..
-            ((#list > 0) and table.concat(list, ", ") or "keine") ..
-            L["\n\nUmschalten: /fp source"]
+        return L["Modus: "] .. ns.Prices.ModeLabel(ns.Config.db.priceSource) .. L["\nVerfuegbar: "] ..
+            ((#list > 0) and table.concat(list, ", ") or L["keine"]) ..
+            L["\n\nUmschalten: Knopf rechts oder /fp source"]
     end)
 
     -- Spaltenkoepfe
@@ -886,8 +912,9 @@ function UI.Refresh()
     -- Geschlossenes Fenster nicht neu rechnen (Auctionator meldet bei jeder Suche).
     if not frame or not frame:IsShown() then return end
     updateSidebar()
-    local all, hidden = ns.Profit.All()
     local db = ns.Config.db
+    if sourceBtn then sourceBtn:SetText(L["Preise: "] .. ns.Prices.ModeLabel(db.priceSource)) end
+    local all, hidden = ns.Profit.All()
     profitCheck:SetChecked(db.onlyProfit and true or false)
     subCheck:SetChecked(db.useSubCrafts ~= false)
 

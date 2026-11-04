@@ -19,6 +19,7 @@ ns.ADDON_NAME = ADDON_NAME
 -- Schluessel = urspruenglicher deutscher Text. Deutscher Client -> L_DE
 -- (echte Umlaute, sonst Schluessel), alle anderen Sprachen -> L_EN.
 local L_DE = {
+    ["Linksklick: naechste Quelle, Rechtsklick: vorige"] = "Linksklick: nächste Quelle, Rechtsklick: vorige",
     ["|cffffcc00TSM-Preisquelle ungueltig, nutze dbmarket:|r "] = "|cffffcc00TSM-Preisquelle ungültig, nutze dbmarket:|r ",
     ["  /fp tsm <formel> - TSM-Preisformel setzen (reset = Standard)"] = "  /fp tsm <Formel> - TSM-Preisformel setzen (reset = Standard)",
     ["Fenster oeffnen zum Einlesen"] = "Fenster öffnen zum Einlesen",
@@ -72,6 +73,18 @@ local L_DE = {
 }
 
 local L_EN = {
+    ["Preisquelle"] = "Price source",
+    ["Aktuell: "] = "Current: ",
+    ["Auto = Auctionator, sonst TSM, sonst eigener AH-Scan"] = "Auto = Auctionator, else TSM, else own AH scan",
+    ["Geladen: "] = "Loaded: ",
+    ["keine"] = "none",
+    ["TSM-Formel: "] = "TSM formula: ",
+    ["TSM: ab Version 4.15 (Forever-Support)"] = "TSM: from version 4.15 (Forever support)",
+    ["Linksklick: naechste Quelle, Rechtsklick: vorige"] = "Left-click: next source, right-click: previous",
+    ["Preise: "] = "Prices: ",
+    ["Manuell"] = "Manual",
+    ["AH-Scan"] = "AH scan",
+    ["\n\nUmschalten: Knopf rechts oder /fp source"] = "\n\nSwitch: button on the right or /fp source",
     ["|cffffcc00TSM-Preisquelle ungueltig, nutze dbmarket:|r "] = "|cffffcc00TSM price source invalid, using dbmarket:|r ",
     ["TSM-Preisformel: "] = "TSM price formula: ",
     ["  |cffff5555(TSM nicht geladen)|r"] = "  |cffff5555(TSM not loaded)|r",
@@ -504,11 +517,9 @@ local function handle(input)
     elseif input == "source" then
         local db = ns.Config and ns.Config.db
         if db then
-            local order = { "auto", "native", "auctionator", "tsm", "manual" }
-            local cur = 1
-            for i, v in ipairs(order) do if v == db.priceSource then cur = i end end
-            db.priceSource = order[(cur % #order) + 1]
-            ns:Print(L["Preisquelle: "] .. db.priceSource)
+            ns.Prices.Cycle(1)
+            ns:Print(L["Preisquelle: "] .. ns.Prices.ModeLabel(db.priceSource))
+            if ns.UI and ns.UI.Refresh then ns.UI.Refresh() end
         end
     elseif input == "tsm" or input:match("^tsm ") then
         local db = ns.Config and ns.Config.db

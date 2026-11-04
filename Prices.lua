@@ -278,6 +278,40 @@ end
 
 Prices.TSM_DEFAULT = TSM_DEFAULT
 
+-- Preisquellen-Modi zum Umschalten (Knopf + /fp source). Nicht geladene
+-- Quellen werden uebersprungen; der aktuelle Modus bleibt immer waehlbar.
+local MODE_LABEL = {
+    auto = "Auto", auctionator = "Auctionator", tsm = "TSM", native = "AH-Scan", manual = "Manuell",
+}
+
+function Prices.ModeLabel(mode)
+    return L[MODE_LABEL[mode] or tostring(mode)]
+end
+
+function Prices.Modes()
+    local db = ns.Config and ns.Config.db
+    local cur = db and db.priceSource or "auto"
+    local list = { "auto" }
+    if auctionatorAPI() or cur == "auctionator" then list[#list + 1] = "auctionator" end
+    if tsmAPI() or cur == "tsm" then list[#list + 1] = "tsm" end
+    if (type(C_AuctionHouse) == "table" and type(C_AuctionHouse.ReplicateItems) == "function") or cur == "native" then
+        list[#list + 1] = "native"
+    end
+    list[#list + 1] = "manual"
+    return list
+end
+
+--- Naechste (dir = 1) oder vorige (dir = -1) Preisquelle waehlen.
+function Prices.Cycle(dir)
+    local db = ns.Config and ns.Config.db
+    if not db then return end
+    local list = Prices.Modes()
+    local cur = 1
+    for i, v in ipairs(list) do if v == db.priceSource then cur = i end end
+    db.priceSource = list[((cur - 1 + (dir or 1)) % #list) + 1]
+    return db.priceSource
+end
+
 function Prices.Init()
     Prices.Detect()
     -- Feuert nach Auctionator-Vollscans UND nach jeder normalen Suche /
