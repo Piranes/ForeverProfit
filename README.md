@@ -1,6 +1,6 @@
 # ForeverProfit
 
-Crafting profit helper for the **WoW Forever** client (Interface 16001), using **Auctionator** prices.
+Crafting profit helper for the **WoW Forever** client (Interface 16001), using **Auctionator** or **TradeSkillMaster** prices.
 
 *Deutsch weiter unten.*
 
@@ -8,6 +8,7 @@ Crafting profit helper for the **WoW Forever** client (Interface 16001), using *
 
 - **Profit list** – every recipe of your character with reagent cost, sale price (after the 5% AH cut) and profit, sorted by profit.
 - **Prices from Auctionator** – full scans, normal searches and the selling tab all feed the list. Vendor prices for reagents (thread, salt, flux …) are used when cheaper.
+- **TradeSkillMaster prices** – with TSM 4.15+ (Forever support) ForeverProfit uses TSM as a second price source (`/fp source` → `tsm`, or automatically when Auctionator has no price). Price formula via `/fp tsm <formula>`, default `first(dbmarket, dbregionmarketavg)`.
 - **Sub-recipes** – reagents you can craft cheaper yourself (e.g. Cured Light Hide) are calculated at their crafting cost, recursively.
 - **Market check** – number of listings at the AH, median price, warnings for old prices (`~`) and price spikes (`!`).
 - **Queue & shopping list** – queue recipes with quantities; the shopping list subtracts bags and bank and is sent to Auctionator as list `ForeverProfit`.
@@ -20,7 +21,7 @@ Crafting profit helper for the **WoW Forever** client (Interface 16001), using *
 ## Requirements
 
 - WoW Forever client (`_classic_beta_`, Interface 16001)
-- [Auctionator](https://www.curseforge.com/wow/addons/auctionator)
+- [Auctionator](https://www.curseforge.com/wow/addons/auctionator) and/or [TradeSkillMaster](https://www.tradeskillmaster.com) 4.15+
 
 ## Installation
 
@@ -43,7 +44,7 @@ Crafting requires the matching profession window to be open (Blizzard restrictio
 
 ## Deutsch
 
-Profit-Rechner für Berufe im **WoW-Forever**-Client mit Preisen aus **Auctionator**: Profit-Liste, Händlerpreise, Teilrezepte, Marktlage, Queue mit Einkaufsliste für Auctionator, Herstellliste, Berufe-Leiste und Skill-Modus. Die Sprache folgt automatisch dem Spiel-Client.
+Profit-Rechner für Berufe im **WoW-Forever**-Client mit Preisen aus **Auctionator** oder **TradeSkillMaster** (ab TSM 4.15): Profit-Liste, Händlerpreise, Teilrezepte, Marktlage, Queue mit Einkaufsliste für Auctionator, Herstellliste, Berufe-Leiste und Skill-Modus. Die Sprache folgt automatisch dem Spiel-Client.
 
 Installation: Ordner `ForeverProfit` nach `World of Warcraft\_classic_beta_\Interface\AddOns\` kopieren, Spiel neu starten, `/fp show`.
 

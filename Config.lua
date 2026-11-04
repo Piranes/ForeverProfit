@@ -13,7 +13,8 @@ local DEFAULT_PROFILE = "Default"
 
 local DEFAULTS = {
     debug = false,
-    priceSource = "auto",        -- "auto" | "native" | "auctionator" | "manual"
+    priceSource = "auto",        -- "auto" | "native" | "auctionator" | "tsm" | "manual"
+    tsmSource = "first(dbmarket, dbregionmarketavg)",  -- TSM-Preisformel
     includeUnprofitable = true,  -- (alt, ungenutzt)
     onlyProfit = true,           -- nur Rezepte mit Gewinn > 0 anzeigen
     onlyLearned = true,          -- nur Rezepte, die der Char kann

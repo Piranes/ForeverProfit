@@ -19,6 +19,8 @@ ns.ADDON_NAME = ADDON_NAME
 -- Schluessel = urspruenglicher deutscher Text. Deutscher Client -> L_DE
 -- (echte Umlaute, sonst Schluessel), alle anderen Sprachen -> L_EN.
 local L_DE = {
+    ["|cffffcc00TSM-Preisquelle ungueltig, nutze dbmarket:|r "] = "|cffffcc00TSM-Preisquelle ungültig, nutze dbmarket:|r ",
+    ["  /fp tsm <formel> - TSM-Preisformel setzen (reset = Standard)"] = "  /fp tsm <Formel> - TSM-Preisformel setzen (reset = Standard)",
     ["Fenster oeffnen zum Einlesen"] = "Fenster öffnen zum Einlesen",
     ["Mit Beruf oeffnen"] = "Mit Beruf öffnen",
     ["ForeverProfit oeffnet sich automatisch mit dem Berufsfenster\nund zeigt die Rezepte dieses Berufs."] = "ForeverProfit öffnet sich automatisch mit dem Berufsfenster\nund zeigt die Rezepte dieses Berufs.",
@@ -70,6 +72,10 @@ local L_DE = {
 }
 
 local L_EN = {
+    ["|cffffcc00TSM-Preisquelle ungueltig, nutze dbmarket:|r "] = "|cffffcc00TSM price source invalid, using dbmarket:|r ",
+    ["TSM-Preisformel: "] = "TSM price formula: ",
+    ["  |cffff5555(TSM nicht geladen)|r"] = "  |cffff5555(TSM not loaded)|r",
+    ["  /fp tsm <formel> - TSM-Preisformel setzen (reset = Standard)"] = "  /fp tsm <formula> - set TSM price formula (reset = default)",
     ["Fenster oeffnen zum Einlesen"] = "open window to read recipes",
     ["Mit Beruf oeffnen"] = "Open with profession",
     ["ForeverProfit oeffnet sich automatisch mit dem Berufsfenster\nund zeigt die Rezepte dieses Berufs."] = "ForeverProfit opens automatically with the profession window\nand shows that profession's recipes.",
@@ -481,6 +487,7 @@ local function handle(input)
         ns:Print(L["  /fp stop      - laufenden Scan abbrechen"])
         ns:Print(L["  /fp ahscan    - Auktionshaus-Preisscan (am AH)"])
         ns:Print(L["  /fp source    - Preisquelle umschalten"])
+        ns:Print(L["  /fp tsm <formel> - TSM-Preisformel setzen (reset = Standard)"])
         ns:Print(L["  /fp learned   - nur gelernte Rezepte an/aus"])
         ns:Print(L["  /fp auto      - mit dem Berufsfenster oeffnen an/aus"])
         ns:Print(L["  /fp minimap   - Minimap-Button an/aus"])
@@ -497,12 +504,22 @@ local function handle(input)
     elseif input == "source" then
         local db = ns.Config and ns.Config.db
         if db then
-            local order = { "auto", "native", "auctionator", "manual" }
+            local order = { "auto", "native", "auctionator", "tsm", "manual" }
             local cur = 1
             for i, v in ipairs(order) do if v == db.priceSource then cur = i end end
             db.priceSource = order[(cur % #order) + 1]
             ns:Print(L["Preisquelle: "] .. db.priceSource)
         end
+    elseif input == "tsm" or input:match("^tsm ") then
+        local db = ns.Config and ns.Config.db
+        local str = input:match("^tsm%s+(.+)$")
+        if db and str then
+            if str == "reset" then str = ns.Prices.TSM_DEFAULT end
+            db.tsmSource = str
+        end
+        ns:Print(L["TSM-Preisformel: "] .. tostring(db and db.tsmSource or ns.Prices.TSM_DEFAULT) ..
+            (ns.Prices.HasTSM() and "" or L["  |cffff5555(TSM nicht geladen)|r"]))
+        if ns.UI and ns.UI.Refresh then ns.UI.Refresh() end
     elseif input == "minimap" then
         if ns.Minimap then ns.Minimap.Toggle() end
     elseif input == "auto" then

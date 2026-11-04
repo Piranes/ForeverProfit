@@ -3,5 +3,6 @@ package-as: ForeverProfit
 enable-nolib-creation: no
 
 ignore:
+  - tools
   - .gitignore
   - .pkgmeta

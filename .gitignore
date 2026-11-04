@@ -5,3 +5,7 @@ Thumbs.db
 desktop.ini
 *.bak
 *.tmp
+
+# Entwicklungs-Werkzeuge
+tools/pylib/
+__pycache__/

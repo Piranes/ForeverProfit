@@ -7,6 +7,9 @@
          Auctionator.API.v1.RegisterForDBUpdate(callerID, callback)
     B) Nativer C_AuctionHouse-Scan (siehe AuctionScan.lua)
     C) manuelle Preise aus der Config
+    D) TradeSkillMaster (ab TSM 4.15 mit Forever-Support):
+         TSM_API.GetCustomPriceValue(preisString, "i:<itemID>")
+       preisString aus db.tsmSource (Standard: Realm-Marktwert, sonst Region)
 
   Fix v0.7.0:
    * v0.6 suchte `_G.AuctionatorAPI` bzw. Atr_*-Funktionen - die gibt es im
@@ -15,8 +18,9 @@
      schlimmsten Fall falsche Werte lieferte). Ersetzt durch die echte API.
 
   Reihenfolge steuert db.priceSource:
-    "auto"        -> Auctionator, sonst nativer Scan
+    "auto"        -> Auctionator, sonst TSM, sonst nativer Scan
     "auctionator" -> nur Auctionator
+    "tsm"         -> nur TradeSkillMaster
     "native"      -> nur nativer AH-Scan
     "manual"      -> nur Handeingabe
 ----------------------------------------------------------------------------]]
@@ -58,6 +62,36 @@ local function tryAuctionator(itemID)
     return p
 end
 
+-- 1b) TradeSkillMaster ---------------------------------------------------------
+local TSM_DEFAULT = "first(dbmarket, dbregionmarketavg)"
+
+local function tsmAPI()
+    local api = _G.TSM_API
+    if type(api) == "table" and type(api.GetCustomPriceValue) == "function" then return api end
+    return nil
+end
+
+local tsmWarned = false
+local function tryTSM(itemID)
+    local api = tsmAPI()
+    itemID = tonumber(itemID)
+    if not api or not itemID then return nil end
+    local db = ns.Config and ns.Config.db
+    local src = (db and db.tsmSource) or TSM_DEFAULT
+    local ok, value, err = pcall(api.GetCustomPriceValue, src, "i:" .. itemID)
+    if (not ok or err) and src ~= "dbmarket" then
+        -- ungueltiger Preis-String (z.B. Quelle im Forever-Client unbekannt)
+        if not tsmWarned then
+            tsmWarned = true
+            ns:Print(L["|cffffcc00TSM-Preisquelle ungueltig, nutze dbmarket:|r "] .. tostring(ok and err or value))
+        end
+        ok, value = pcall(api.GetCustomPriceValue, "dbmarket", "i:" .. itemID)
+    end
+    local p = ok and toNumber(value) or nil
+    if p then Prices.source = "tsm" end
+    return p
+end
+
 -- 2) Manuell ----------------------------------------------------------------
 local function tryManual(item)
     local db = ns.Config and ns.Config.db
@@ -89,8 +123,10 @@ function Prices.Get(itemID)
         return native()
     elseif mode == "auctionator" then
         return tryAuctionator(itemID)
+    elseif mode == "tsm" then
+        return tryTSM(itemID)
     end
-    return tryAuctionator(itemID) or native()
+    return tryAuctionator(itemID) or tryTSM(itemID) or native()
 end
 
 --- Eigenen Preis setzen (Kupfer) oder mit nil entfernen.
@@ -224,6 +260,7 @@ end
 function Prices.Detect()
     local list = {}
     if auctionatorAPI() then list[#list + 1] = "Auctionator" end
+    if tsmAPI() then list[#list + 1] = "TradeSkillMaster" end
     if type(C_AuctionHouse) == "table" and type(C_AuctionHouse.ReplicateItems) == "function" then
         list[#list + 1] = L["C_AuctionHouse (nativ)"]
     end
@@ -234,6 +271,12 @@ end
 function Prices.HasAuctionator()
     return auctionatorAPI() ~= nil
 end
+
+function Prices.HasTSM()
+    return tsmAPI() ~= nil
+end
+
+Prices.TSM_DEFAULT = TSM_DEFAULT
 
 function Prices.Init()
     Prices.Detect()
