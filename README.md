@@ -8,7 +8,7 @@ Crafting profit helper for the **WoW Forever** client (Interface 16001), using *
 
 - **Profit list** – every recipe of your character with reagent cost, sale price (after the 5% AH cut) and profit, sorted by profit.
 - **Prices from Auctionator** – full scans, normal searches and the selling tab all feed the list. Vendor prices for reagents (thread, salt, flux …) are used when cheaper.
-- **TradeSkillMaster prices** – with TSM 4.15+ (Forever support) ForeverProfit uses TSM as a second price source (`/fp source` → `tsm`, or automatically when Auctionator has no price). Price formula via `/fp tsm <formula>`, default `first(dbmarket, dbregionmarketavg)`.
+- **TradeSkillMaster prices** – with TSM 4.15+ (Forever support) TSM is the default price source: all prices come from TSM (Auctionator is only used when the TSM addon is not installed). Auctionator, the own AH scan or manual prices can still be picked with the price button. Price formula via `/fp tsm <formula>`, default `first(dbmarket, dbregionmarketavg, dbhistorical, dbregionhistorical, dbminbuyout)`.
 - **Sub-recipes** – reagents you can craft cheaper yourself (e.g. Cured Light Hide) are calculated at their crafting cost, recursively.
 - **Market check** – number of listings at the AH, median price, warnings for old prices (`~`) and price spikes (`!`).
 - **Queue & shopping list** – queue recipes with quantities; the shopping list subtracts bags and bank and is sent to Auctionator as list `ForeverProfit`.

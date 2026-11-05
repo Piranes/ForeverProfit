@@ -75,7 +75,7 @@ local L_DE = {
 local L_EN = {
     ["Preisquelle"] = "Price source",
     ["Aktuell: "] = "Current: ",
-    ["Auto = Auctionator, sonst TSM, sonst eigener AH-Scan"] = "Auto = Auctionator, else TSM, else own AH scan",
+    ["Standard ist TSM. Ohne TSM-Addon wird Auctionator genutzt."] = "Default is TSM. Without the TSM addon Auctionator is used.",
     ["Geladen: "] = "Loaded: ",
     ["keine"] = "none",
     ["TSM-Formel: "] = "TSM formula: ",

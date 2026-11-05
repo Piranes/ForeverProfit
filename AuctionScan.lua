@@ -173,7 +173,7 @@ function AuctionScan.Start()
         return false
     end
 
-    local mode = ns.Config and ns.Config.db and ns.Config.db.priceSource or "auto"
+    local mode = ns.Config and ns.Config.db and ns.Config.db.priceSource or "tsm"
     if mode ~= "native" and startAuctionatorScan() then return true end
 
     if type(C_AuctionHouse) ~= "table" or type(C_AuctionHouse.ReplicateItems) ~= "function" then

@@ -18,9 +18,9 @@
      schlimmsten Fall falsche Werte lieferte). Ersetzt durch die echte API.
 
   Reihenfolge steuert db.priceSource:
-    "auto"        -> Auctionator, sonst TSM, sonst nativer Scan
+    "tsm"         -> TradeSkillMaster (Standard). Ohne TSM-Addon: Auctionator,
+                     sonst nativer Scan.
     "auctionator" -> nur Auctionator
-    "tsm"         -> nur TradeSkillMaster
     "native"      -> nur nativer AH-Scan
     "manual"      -> nur Handeingabe
 ----------------------------------------------------------------------------]]
@@ -63,7 +63,10 @@ local function tryAuctionator(itemID)
 end
 
 -- 1b) TradeSkillMaster ---------------------------------------------------------
-local TSM_DEFAULT = "first(dbmarket, dbregionmarketavg)"
+-- Alle Forever-Datensaetze der TSM-App: Realm-/Regions-Marktwert, Historie,
+-- zuletzt der Mindestpreis aus eigenen Scans.
+local TSM_DEFAULT = "first(dbmarket, dbregionmarketavg, dbhistorical, dbregionhistorical, dbminbuyout)"
+local TSM_OLD_DEFAULT = "first(dbmarket, dbregionmarketavg)"
 
 local function tsmAPI()
     local api = _G.TSM_API
@@ -106,7 +109,7 @@ end
 --- Preis in Kupfer fuer eine ItemID. nil wenn unbekannt.
 function Prices.Get(itemID)
     if itemID == nil then return nil end
-    local mode = (ns.Config and ns.Config.db and ns.Config.db.priceSource) or "auto"
+    local mode = (ns.Config and ns.Config.db and ns.Config.db.priceSource) or "tsm"
 
     local function native()
         if not (ns.AuctionScan and ns.AuctionScan.Get) then return nil end
@@ -123,10 +126,11 @@ function Prices.Get(itemID)
         return native()
     elseif mode == "auctionator" then
         return tryAuctionator(itemID)
-    elseif mode == "tsm" then
-        return tryTSM(itemID)
     end
-    return tryAuctionator(itemID) or tryTSM(itemID) or native()
+    -- Standard "tsm": fest TradeSkillMaster. Nur wenn das TSM-Addon fehlt,
+    -- Auctionator bzw. eigener Scan, damit die Liste nicht leer bleibt.
+    if tsmAPI() then return tryTSM(itemID) end
+    return tryAuctionator(itemID) or native()
 end
 
 --- Eigenen Preis setzen (Kupfer) oder mit nil entfernen.
@@ -281,7 +285,7 @@ Prices.TSM_DEFAULT = TSM_DEFAULT
 -- Preisquellen-Modi zum Umschalten (Knopf + /fp source). Nicht geladene
 -- Quellen werden uebersprungen; der aktuelle Modus bleibt immer waehlbar.
 local MODE_LABEL = {
-    auto = "Auto", auctionator = "Auctionator", tsm = "TSM", native = "AH-Scan", manual = "Manuell",
+    auctionator = "Auctionator", tsm = "TSM", native = "AH-Scan", manual = "Manuell",
 }
 
 function Prices.ModeLabel(mode)
@@ -290,10 +294,9 @@ end
 
 function Prices.Modes()
     local db = ns.Config and ns.Config.db
-    local cur = db and db.priceSource or "auto"
-    local list = { "auto" }
+    local cur = db and db.priceSource or "tsm"
+    local list = { "tsm" }
     if auctionatorAPI() or cur == "auctionator" then list[#list + 1] = "auctionator" end
-    if tsmAPI() or cur == "tsm" then list[#list + 1] = "tsm" end
     if (type(C_AuctionHouse) == "table" and type(C_AuctionHouse.ReplicateItems) == "function") or cur == "native" then
         list[#list + 1] = "native"
     end
@@ -314,6 +317,11 @@ end
 
 function Prices.Init()
     Prices.Detect()
+    -- alte Standard-Formel (v1.7.0) auf die neue umstellen, eigene Formeln bleiben
+    local db = ns.Config and ns.Config.db
+    if db and (db.tsmSource == nil or db.tsmSource == TSM_OLD_DEFAULT) then db.tsmSource = TSM_DEFAULT end
+    -- "auto" gibt es nicht mehr: TSM ist die feste Standard-Preisquelle
+    if db and (db.priceSource == nil or db.priceSource == "auto") then db.priceSource = "tsm" end
     -- Feuert nach Auctionator-Vollscans UND nach jeder normalen Suche /
     -- Verkaufen-Abfrage in Auctionator. Chat-Meldung nur fuer unseren
     -- eigenen Scan, sonst wuerde jede Suche spammen.

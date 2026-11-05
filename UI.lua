@@ -784,7 +784,7 @@ local function build()
         local db = ns.Config.db
         local list = ns.Prices.available or ns.Prices.Detect()
         local lines = { L["Aktuell: "] .. ns.Prices.ModeLabel(db.priceSource), "" }
-        lines[#lines + 1] = L["Auto = Auctionator, sonst TSM, sonst eigener AH-Scan"]
+        lines[#lines + 1] = L["Standard ist TSM. Ohne TSM-Addon wird Auctionator genutzt."]
         lines[#lines + 1] = L["Geladen: "] .. ((#list > 0) and table.concat(list, ", ") or L["keine"])
         if ns.Prices.HasTSM() then
             lines[#lines + 1] = L["TSM-Formel: "] .. tostring(db.tsmSource or ns.Prices.TSM_DEFAULT)

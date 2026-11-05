@@ -52,12 +52,12 @@ Auctionator = { API = { v1 = {
 TSM_API = {
   GetCustomPriceValue = function(str, itemString)
     TSM_CALLS[#TSM_CALLS+1] = str
-    if str ~= "dbmarket" and str ~= "first(dbmarket, dbregionmarketavg)" then return nil, "Invalid source" end
+    if str ~= "dbmarket" and not str:match("^first%(db") then return nil, "Invalid source" end
     local id = tonumber(itemString:match("^i:(%d+)$"))
     return TSM_PRICES[id]
   end,
 }
-AUC_PRICES = { [2318] = 150 }
+AUC_PRICES = { [2318] = 150, [2320] = 50 }
 TSM_PRICES = { [2318] = 140, [2319] = 900 }
 TSM_CALLS = {}
 '''
@@ -87,8 +87,15 @@ def run(locale):
       local db = ns.Config.db
       local r = {}
       local function get(mode, id) db.priceSource = mode; return tostring(ns.Prices.Get(id)) .. "/" .. tostring(ns.Prices.source) end
-      r[#r+1] = "auto 2318=" .. get("auto", 2318)          -- Auctionator zuerst
-      r[#r+1] = "auto 2319=" .. get("auto", 2319)          -- Auctionator leer -> TSM
+      r[#r+1] = "default=" .. tostring(db.priceSource)    -- tsm
+      db.priceSource = "auto"; ns.Prices.Init()
+      r[#r+1] = "migriert=" .. tostring(db.priceSource)   -- auto -> tsm
+      r[#r+1] = "modes=" .. table.concat(ns.Prices.Modes(), ",")
+      r[#r+1] = "tsm 2320=" .. get("tsm", 2320)           -- fest TSM: kein Auctionator-Fallback (nil)
+      local saved = TSM_API; TSM_API = nil
+      r[#r+1] = "ohneTSM 2318=" .. get("tsm", 2318)       -- ohne TSM-Addon -> Auctionator (150)
+      TSM_API = saved
+      r[#r+1] = "formel=" .. tostring(db.tsmSource)
       r[#r+1] = "tsm 2318=" .. get("tsm", 2318)
       r[#r+1] = "auctionator 2319=" .. get("auctionator", 2319)
       db.tsmSource = "dbbogus"
