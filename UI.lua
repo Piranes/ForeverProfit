@@ -62,10 +62,7 @@ local function coins(copper)
 end
 
 local function itemInfo(id)
-    if not id or type(GetItemInfo) ~= "function" then return nil end
-    local name, _, quality, _, _, _, _, _, _, icon = GetItemInfo(id)
-    if not icon and type(GetItemIcon) == "function" then icon = GetItemIcon(id) end
-    return name, quality, icon
+    return ns.ItemInfo(id)
 end
 
 local function qualityHex(q)

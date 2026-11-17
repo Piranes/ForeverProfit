@@ -275,14 +275,9 @@ end
 -- Einkaufsliste -------------------------------------------------------------
 
 local function itemName(id)
-    if not id or type(GetItemInfo) ~= "function" then return nil end
-    local name = ns.Try(GetItemInfo, id)
-    if type(name) == "string" then return name end
-    -- Item-Info anfordern, beim naechsten Klick ist der Name da.
-    if type(C_Item) == "table" and type(C_Item.RequestLoadItemDataByID) == "function" then
-        ns.Try(C_Item.RequestLoadItemDataByID, id)
-    end
-    return nil
+    -- ns.ItemInfo fordert die Item-Info bei Bedarf an, beim naechsten Klick
+    -- ist der Name da.
+    return (ns.ItemInfo(id))
 end
 
 --- Berechnet, was gekauft werden muss.
